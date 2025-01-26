@@ -1,0 +1,26 @@
+{
+    "value": [
+        {
+            "id": "/subscriptions/7cee9002-39e6-44f8-a673-6f8680f8f4ad/providers/Microsoft.ApiManagement/locations/eastus2/deletedservices/apim-ghdoewzvjbf7q",
+            "name": "apim-ghdoewzvjbf7q",
+            "type": "Microsoft.ApiManagement/deletedservices",
+            "location": "East US 2",
+            "properties": {
+                "serviceId": "/subscriptions/7cee9002-39e6-44f8-a673-6f8680f8f4ad/resourceGroups/rg-AI101/providers/Microsoft.ApiManagement/service/apim-ghdoewzvjbf7q",
+                "scheduledPurgeDate": "2025-01-26T17:36:54.7313632Z",
+                "deletionDate": "2025-01-24T17:37:48.9549146Z"
+            }
+        },
+        {
+            "id": "/subscriptions/7cee9002-39e6-44f8-a673-6f8680f8f4ad/providers/Microsoft.ApiManagement/locations/eastus2/deletedservices/apim-3hlqd4waemixc",
+            "name": "apim-3hlqd4waemixc",
+            "type": "Microsoft.ApiManagement/deletedservices",
+            "location": "East US 2",
+            "properties": {
+                "serviceId": "/subscriptions/7cee9002-39e6-44f8-a673-6f8680f8f4ad/resourceGroups/rg-techexecl2/providers/Microsoft.ApiManagement/service/apim-3hlqd4waemixc",
+                "scheduledPurgeDate": "2025-01-26T17:18:55.489688Z",
+                "deletionDate": "2025-01-24T17:19:42.2970486Z"
+            }
+        }
+    ]
+}

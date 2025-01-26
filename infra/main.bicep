@@ -11,18 +11,49 @@ param location string
 
 @description('The Azure resource group where new resources will be deployed')
 param resourceGroupName string = ''
-@description('The Open AI resource name. If ommited will be generated')
-param openAiName string = ''
 
-param createRoleForUser bool = true
-
-var aiConfig = loadYamlContent('./ai.yaml')
-
-param principalId string = ''
+@description('The email address of the owner of the service')
+@minLength(1)
+param apimPublisherEmail string = 'support@contososuites.com'
 
 var abbrs = loadJsonContent('./abbreviations.json')
 var resourceToken = toLower(uniqueString(subscription().id, environmentName, location))
 var tags = { 'azd-env-name': environmentName }
+
+var userManagedIdentityName = '${abbrs.managedIdentityUserAssignedIdentities}${resourceToken}'
+var apiManagementServiceName = '${abbrs.apiManagementService}${resourceToken}'
+var storageAccountName = '${abbrs.storageStorageAccounts}${resourceToken}'
+var searchServiceName = '${abbrs.searchSearchServices}${resourceToken}'
+var openAIName = 'openai-${resourceToken}'
+//var appInsightsName = '${abbrs.insightsComponents}${resourceToken}-cosu'
+
+param createRoleForUser bool = true
+
+// var aiConfig = loadYamlContent('./ai.yaml')
+
+param principalId string = ''
+
+@description('Model deployments for OpenAI')
+var deployments = [
+  {
+    name: 'gpt-4o'
+    model: {
+      format: 'OpenAI'
+      name: 'gpt-4o'
+      version: '2024-05-13'
+    }
+    capacity: 40
+  }
+  {
+    name: 'text-embedding-ada-002'
+    model: {
+      format: 'OpenAI'
+      name: 'text-embedding-ada-002'
+      version: '2'
+    }
+    capacity: 120
+  }
+]
 
 // Organize resources in a resource group
 resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
@@ -36,7 +67,7 @@ module userManagedIdentity 'core/ai/userManagedIdentity.bicep' = {
   scope: rg
   params: {
     location: location
-    userManagedIdentityName: '${abbrs.managedIdentityUserAssignedIdentities}${resourceToken}'
+    userManagedIdentityName: userManagedIdentityName
     tags: tags
   }
 }
@@ -47,7 +78,8 @@ module storageAccount 'core/ai/storageAccount.bicep' = {
   params: {
     location: location
     tags: tags
-    name: '${abbrs.storageStorageAccounts}${resourceToken}'
+    name: storageAccountName
+    containerNames: ['data']
   }
 }
 
@@ -58,9 +90,9 @@ module apim 'core/ai/apim.bicep' = {
     managedIdentityName: userManagedIdentity.outputs.name
     location: location
     tags: tags
-    apiManagementServiceName: '${abbrs.apiManagementService}${resourceToken}'
+    apiManagementServiceName: apiManagementServiceName
     restore: false
-    apimPublisherEmail: 'mrochon@microsoft.com'
+    apimPublisherEmail: apimPublisherEmail
   }
 }
 
@@ -70,22 +102,32 @@ module cognitiveServices 'core/ai/cognitiveservices.bicep' = {
   params: {
     location: location
     tags: tags
-    name: !empty(openAiName) ? openAiName : 'aoai-${resourceToken}'
-    kind: 'AIServices'
-    deployments: contains(aiConfig, 'deployments') ? aiConfig.deployments : []
+    name: openAIName
+    // deployments: contains(aiConfig, 'deployments') ? aiConfig.deployments : []
+    deployments: deployments
   }
 }
 
-module userRoleDataScientist 'core/security/role.bicep' =  if (createRoleForUser) {
-  name: 'user-role-data-scientist'
+module search 'core/ai/search.bicep' = {
+  name: 'search'
   scope: rg
   params: {
-    principalId: principalId
-    roleDefinitionId: 'f6c7c914-8db3-469d-8ca1-694a8f32e121'
-    principalType: 'User'
+    location: location
+    tags: tags
+    name: searchServiceName
+    managedIdentityName: userManagedIdentity.outputs.name
   }
 }
 
+module storageReaderRoleManagedIdentity 'core/security/roleAssignments.bicep' = {
+  scope: rg
+  name: 'storageReaderRoleManagedIdentity'
+  params: {
+    roleDefinitionId: '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1' //Storage Blob Data Reader
+    principalId: userManagedIdentity.outputs.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
 
 // output the names of the resources
 output AZURE_TENANT_ID string = tenant().tenantId

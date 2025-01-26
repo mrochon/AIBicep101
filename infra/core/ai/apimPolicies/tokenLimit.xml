@@ -1,0 +1,7 @@
+<azure-openai-token-limit counter-key="@(context.Request.IpAddress)"
+        tokens-per-minute="200"
+        estimate-prompt-tokens="true"    
+
+        remaining-tokens-header-name="x-remaining-tokens"  
+        remaining-tokens-variable-name="remainingTokens"
+ />

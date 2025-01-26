@@ -9,6 +9,7 @@ param principalId string
   'User'
 ])
 param principalType string = 'ServicePrincipal'
+// See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles
 param roleDefinitionId string
 
 resource role 'Microsoft.Authorization/roleAssignments@2022-04-01' = {

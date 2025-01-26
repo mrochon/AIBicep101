@@ -33,3 +33,12 @@ resource apiManagementService 'Microsoft.ApiManagement/service@2024-05-01' = {
     restore: restore
   }
 }
+
+resource apiManagementPolicy 'Microsoft.ApiManagement/service/policies@2024-06-01-preview' = {
+  parent: apiManagementService
+  name: 'policy'
+  properties: {
+    value: loadTextContent('apimPolicies/tokenLimit.xml')
+    format: 'xml'
+  }
+}

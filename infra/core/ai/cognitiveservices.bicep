@@ -4,6 +4,7 @@ param location string = resourceGroup().location
 param tags object = {}
 @description('The custom subdomain name used to access the API. Defaults to the value of the name parameter.')
 param customSubDomainName string = name
+param disableLocalAuth bool = false
 param deployments array = []
 param kind string = 'OpenAI'
 
@@ -21,7 +22,7 @@ param networkAcls object = empty(allowedIpRules) ? {
   defaultAction: 'Deny'
 }
 
-resource account 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
+resource account 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
   name: name
   location: location
   tags: tags
@@ -30,20 +31,21 @@ resource account 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
     customSubDomainName: customSubDomainName
     publicNetworkAccess: publicNetworkAccess
     networkAcls: networkAcls
-    disableLocalAuth: false
+    disableLocalAuth: disableLocalAuth
+    restore: false
   }
   sku: sku
 }
 
 @batchSize(1)
-resource deployment 'Microsoft.CognitiveServices/accounts/deployments@2023-05-01' = [for deployment in deployments: {
+resource deployment 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = [for deployment in deployments: {
   parent: account
   name: deployment.name
   properties: {
     model: deployment.model
-    raiPolicyName: contains(deployment, 'raiPolicyName') ? deployment.raiPolicyName : null
+    raiPolicyName: deployment.?raiPolicyName ?? null
   }
-  sku: contains(deployment, 'sku') ? deployment.sku : {
+  sku: deployment.?sku ?? {
     name: 'Standard'
     capacity: 20
   }
